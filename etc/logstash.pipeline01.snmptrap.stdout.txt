@@ -1,0 +1,74 @@
+input {
+    ### Input is coming from Syslog and other protocols. 
+    ### Initially, have a config for each protocol and then combin them if possible
+    udp {
+        port => 162
+        type => "snmptrap"
+    }
+}
+
+filter {
+    ### Load grok patterns into a dictionary dynamically
+    patterns = {}
+    Dir.glob("./patterns/snmptrap/*").each do |pattern_file|
+        tag_name = File.basename(pattern_file, ".*")
+        patterns[tag_name] = File.read(pattern_file)
+    end
+    
+    ### Initial parsing and tag assignment
+    grok {
+        match => {
+            "message" => [
+                # Your initial grok patterns here to assign tags
+                # For example:
+                "%{PATTERN01:pipeline01_snmptrap_tag01}",
+                "%{PATTERN02:pipeline01_snmptrap_tag02}"
+                "%{PATTERN03:pipeline01_snmptrap_tag03}"
+                "%{PATTERN04:pipeline01_snmptrap_tag04}"
+                "%{PATTERN05:pipeline01_snmptrap_tag05}"
+            ]
+        }
+    }
+    
+    ### Determine pattern directory dynamically based on tags
+    if "syslog_tag01" in [tags] {
+        mutate {
+            add_field => { "patterns_dir" => "./patterns/snmptrap/pipeline01_snmptrap_tag01_pattern" }
+        }
+    } else if "syslog_tag02" in [tags] {
+        mutate {
+            add_field => { "patterns_dir" => "./patterns/snmptrap/pipeline01_snmptrap_tag02_pattern" }
+        }
+    } else if "syslog_tag03" in [tags] {
+        mutate {
+            add_field => { "patterns_dir" => "./patterns/snmptrap/pipeline01_snmptrap_tag03_pattern" }
+        }
+    } else if "syslog_tag04" in [tags] {
+        mutate {
+            add_field => { "patterns_dir" => "./patterns/snmptrap/pipeline01_snmptrap_tag04_pattern" }
+        }
+    } else if "syslog_tag05" in [tags] {
+        mutate {
+            add_field => { "patterns_dir" => "./patterns/snmptrap/pipeline01_snmptrap_tag05_pattern" }
+        }
+    } else {
+        mutate {
+            add_field => { "patterns_dir" => "./patterns/snmptrap/pipeline01_snmptrap_default_pattern" }
+        }
+    }
+    ### Full parsing based on assigned pattern
+    grok {
+        match => {
+            "message" => "%{SYSLOGTIMESTAMP:timestamp} %{SYSLOGHOST:host} %{DATA:program}: %{GREEDYDATA:message}"
+        }
+        patterns_dir => "%{patterns_dir}"
+        add_tag => ["parsed_syslog"]
+    }
+}
+
+output {
+    ### Output the parsed events to stdout
+    stdout {
+        codec => rubydebug
+    }
+}

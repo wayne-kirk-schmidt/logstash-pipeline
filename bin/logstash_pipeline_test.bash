@@ -14,6 +14,7 @@
 #    @author-name    Wayne Kirk Schmidt
 #    @author-email   wayne.kirk.schmidt@changeis.co.jp
 #
+
 umask 022
 
 export PATH="/usr/share/logstash/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:$PATH"
@@ -29,3 +30,4 @@ OutputType=${3:-"stdout"}
 DumpConfig="$ETCDIR/logstash.${PipelineStage}.${InputType}.${OutputType}.txt"
 
 echo "timeout 12 logstash -f ${DumpConfig} --path.settings=/etc/logstash --log.level=fatal"
+

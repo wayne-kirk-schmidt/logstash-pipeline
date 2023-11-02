@@ -22,7 +22,7 @@ export PATH="/usr/share/logstash/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/us
 BINDIR=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
 ETCDIR=$( realpath "$BINDIR"/../etc )
 
-PipelineStage=${1:-"pipeline01"}
+PipelineStage=${1:-"stage01"}
 InputType=${2:-"syslog"}
 OutputType=${3:-"stdout"}
 

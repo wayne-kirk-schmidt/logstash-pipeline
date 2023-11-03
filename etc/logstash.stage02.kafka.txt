@@ -1,0 +1,71 @@
+input {
+    ### Consume data from multiple topics. This will be augmented by groups also.
+    kafka {
+        bootstrap_servers => "%%KSVRIPVS%%:%%KPORT%%"
+        topics => ["timestamps_topic", "cmdb_topic", "client_support_topic"]
+        consumer_threads => 3
+        decorate_events => true
+    }
+}
+
+filter {
+    ### Extract timestamps from the input event
+    date {
+        match => ["timestamp_field_from_input", "ISO8601"]
+        target => "input_timestamp"
+    }
+    
+    ### General Processing logic for CMDB data
+    if [topic] == "cmdb_topic" {
+        # 
+        # Filters and processing logic here
+        # 
+    }
+    
+    ### General Processing logic for client support data
+    if [topic] == "client_support_topic" {
+        # 
+        # Filters and processing logic here
+        # 
+    }
+    
+    ### Add timestamps for each step in the pipeline
+    ruby {
+        # 
+        # Timestamps. Our goal is build up timestamps for each step
+        # 
+        code => "
+            event.set('processing_timestamp', Time.now.strftime('%Y-%m-%dT%H:%M:%S.%LZ'))
+        "
+    }
+    
+    ### Create JSON representations of processed data and relationships
+    if [topic] == "timestamps_topic" {
+        mutate {
+            add_field => {
+                "processed_data_json" => '{"field_name": "field_value"}'
+                "relationship_json" => '{"related_field": "related_value"}'
+            }
+        }
+    }
+}
+
+output {
+    kafka {
+        bootstrap_servers => "%%KSVRIPVS%%:%%KPORT%%"
+        topic_id => "processed_data_topic"
+        codec => json_lines
+    }
+
+    kafka {
+        bootstrap_servers => "%%KSVRIPVS%%:%%KPORT%%"
+        topic_id => "timestamps_output_topic"
+        codec => json_lines
+    }
+
+    kafka {
+        bootstrap_servers => %%KSVRIPVS%%:%%KPORT%%"
+        topic_id => "relationships_topic"
+        codec => json_lines
+    }
+}

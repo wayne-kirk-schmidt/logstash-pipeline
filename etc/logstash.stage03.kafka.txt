@@ -1,0 +1,25 @@
+input {
+    ### Placeholder for the script to extract CMDB information. 
+    ### A better way would be to have the data pushed to kafka from the CMDB server.
+    exec {
+        command => "/usr/local/logstash/bin/populate_cmbd_ci_topic.py"
+        interval => 60
+        type => "custom_data"
+    }
+}
+
+filter {
+    ### this assumes that JSON is used as the message format
+    json {
+        source => "message"
+        target => "parsed_data"
+    }
+    ### Custom logic and filtering can be done here if required
+}
+
+output {
+    kafka {
+        bootstrap_servers => "%%KSVRIPVS%%:%%KPORT%%"
+        topic_id => "cmdb_ci_information"
+    }
+}
